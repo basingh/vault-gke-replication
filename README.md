@@ -69,7 +69,7 @@ For this KB we will leave everything default except following three changes on [
               tag: "1.7.1_ent"
 ```
 
-3. Update `serviceType` to `LoadBalancer` for UI [here](https://github.com/hashicorp/vault-helm/blob/master/values.yaml#L677) to access Vault through UI. And `service` type to `LoadBalancer` [here](https://github.com/hashicorp/vault-helm/blob/master/values.yaml#L459) the reason we do this is to expose `vault-active` service to externalIP, this will help while setting up replication later.
+3. Update `serviceType` to `LoadBalancer` for UI [here](https://github.com/hashicorp/vault-helm/blob/master/values.yaml#L677) to access Vault through UI. And `service` type to `LoadBalancer` [here](https://github.com/hashicorp/vault-helm/blob/master/values.yaml#L459) the reason we do this is to expose `vault-active` service to externalIP, this will help while setting up replication later. *Refer to Notes section below for more details.*
 
 ```
 ## for UI
@@ -208,6 +208,37 @@ spec:
   type: NodePort
 ```
 
+If you end up using `LoadBalancer` in service your `vault-active` service will look like below. Essentially and `external-ip` address pointing to internl `vault-active` service on port `8200` and `8201`.
+
+```
+❯ kubectl describe services vault-active
+Name:                     vault-active
+Namespace:                default
+Labels:                   app.kubernetes.io/instance=vault
+                          app.kubernetes.io/managed-by=Helm
+                          app.kubernetes.io/name=vault
+                          helm.sh/chart=vault-0.12.0
+Annotations:              cloud.google.com/neg: {"ingress":true}
+                          cloud.google.com/neg-status:
+                            {"network_endpoint_groups":{"8201":"k8s1-2297d871-default-vault-active-8201-bc2047f4"},"zones":["australia-southeast1-a"]}
+                          meta.helm.sh/release-name: vault
+                          meta.helm.sh/release-namespace: default
+Selector:                 app.kubernetes.io/instance=vault,app.kubernetes.io/name=vault,component=server,vault-active=true
+Type:                     LoadBalancer
+IP:                       xx.xxx.xx.xxx
+LoadBalancer Ingress:     xx.xx.xxx.xx
+Port:                     http  8200/TCP
+TargetPort:               8200/TCP
+NodePort:                 http  31351/TCP
+Endpoints:                10.xxx.xx.xx:8200
+Port:                     https-internal  8201/TCP
+TargetPort:               8201/TCP
+NodePort:                 https-internal  31567/TCP
+Endpoints:                10.xxx.xx.xx:8201
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   <none>
+```
 ### Additional Information: 
 
 * https://www.vaultproject.io/docs/platform/k8s
